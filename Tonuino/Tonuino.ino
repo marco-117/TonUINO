@@ -91,8 +91,8 @@ static uint8_t _lastTrackFinished;
 
 //////// rotary encoder /////////////////////////////////////////////////
 #if defined ROTARY_ENCODER
-int8_t RotEncOldEncPos = -1 ;
-int8_t RotEncPos = 15;
+int8_t RotEncOldEncPos = 0 ;
+int8_t RotEncPos = 0;
 ClickEncoder encoder(ROTARY_ENCODER_PIN_A, ROTARY_ENCODER_PIN_B, ROTARY_ENCODER_STEPS);
 #endif
 //////////////////////////////////////////////////////////////////////////
@@ -2147,6 +2147,11 @@ void setup() {
   mp3.setVolume(volume);
   mp3.setEq(mySettings.eq - 1);
 
+#if defined ROTARY_ENCODER
+  RotEncPos = volume;
+  RotEncOldEncPos = RotEncPos;
+#endif
+   
   mp3.playMp3FolderTrack(264);
   delay(500);
   waitForTrackToFinish();
@@ -3446,33 +3451,37 @@ void RotEncSetVolume () {
 
   RotEncPos += encoder.getValue();
 
-  if ((RotEncPos >= RotEncOldEncPos + 2) || (RotEncPos <= RotEncOldEncPos - 2))  {
-    if (RotEncPos >= RotEncOldEncPos + 2) {
-      RotEncPos = RotEncPos - 1;
-      RotEncOldEncPos = RotEncPos;
-    }
-    else if (RotEncPos <= RotEncOldEncPos - 2) {
-      RotEncPos = RotEncPos + 1;
-      RotEncOldEncPos = RotEncPos;
-    }
+  if (RotEncPos != RotEncOldEncPos)  {
+#if defined ROTARY_ENCODER_PRINT
+    Serial.print(F("RotEncPos: "));
+    Serial.println(RotEncPos);
+    Serial.print(F("RotEncOldEncPos: "));
+    Serial.println(RotEncOldEncPos);
+#endif
+
+    RotEncOldEncPos = RotEncPos;
+    
     if (RotEncPos > (mySettings.maxVolume)) {
-      volume  = mySettings.maxVolume;
+#if defined ROTARY_ENCODER_PRINT
+    Serial.println(F("RotEncPos corrected to max"));
+#endif
       RotEncPos  = mySettings.maxVolume;
     }
     else if (RotEncPos < (mySettings.minVolume)) {
-      volume  = mySettings.minVolume;
+#if defined ROTARY_ENCODER_PRINT
+    Serial.println(F("RotEncPos corrected to min"));
+#endif
       RotEncPos  = mySettings.minVolume;
     }
-    else   {
-      volume = RotEncPos;
-    }
+
     if (activeModifier != NULL) {
       if (activeModifier->handleVolume() == true) {
         return;
       }
     }
+    volume = RotEncPos;
     mp3.setVolume(volume);
-#if defined DEBUG
+#if defined DEBUG || defined ROTARY_ENCODER_PRINT
     Serial.print(F("volume: "));
     Serial.println(volume);
 #endif
