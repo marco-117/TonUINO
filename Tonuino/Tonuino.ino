@@ -2952,7 +2952,6 @@ bool checkTwo ( uint8_t a[], uint8_t b[] ) {
 //////////////////////////////////////////////////////////////////////////
 #ifdef ROTARY_ENCODER
 void RotEncSetVolume () {
-void RotEncSetVolume () {
 
   RotEncPos += encoder.getValue();
 
